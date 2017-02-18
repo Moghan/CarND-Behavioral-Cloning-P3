@@ -40,7 +40,7 @@ def load_data():
 
 		# get all labels (steering angles)
 		steering_angle = float(row[3])
-		correction = 0.2
+		correction = 0.5
 		
 		steering_angles.append(steering_angle)
 		steering_angles.append(steering_angle + correction)
@@ -107,6 +107,6 @@ model.add(Dense(100))
 model.add(Dense(50))
 model.add(Dense(1))
 model.compile(optimizer='adam', loss='mse')
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=3)
+model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=5)
 
 model.save('model.h5')
