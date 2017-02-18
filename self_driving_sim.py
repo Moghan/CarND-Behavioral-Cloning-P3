@@ -18,7 +18,7 @@ def load_data():
 
 	
 
-	path = ".\\recorded_data\IMG\\"
+	path = "recorded_data/IMG/"
 
 
 	for row in list:
