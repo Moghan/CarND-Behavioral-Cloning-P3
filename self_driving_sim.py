@@ -40,7 +40,7 @@ def load_data():
 
 		# get all labels (steering angles)
 		steering_angle = float(row[3])
-		correction = 0.5
+		correction = 0.3
 		
 		steering_angles.append(steering_angle)
 		steering_angles.append(steering_angle + correction)
