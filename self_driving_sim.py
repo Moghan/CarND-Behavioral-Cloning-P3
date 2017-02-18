@@ -4,6 +4,8 @@ import numpy as np
 
 
 def load_data():
+	print("=================================")
+	print ('Loading data...')
 	images = []
 	steering_angles = []
 
@@ -40,21 +42,23 @@ def load_data():
 
 		# get all labels (steering angles)
 		steering_angle = float(row[3])
-		correction = 0.3
+		correction = 0.2
 		
 		steering_angles.append(steering_angle)
 		steering_angles.append(steering_angle + correction)
 		steering_angles.append(steering_angle - correction)
 
-	print ('===========================')
+	print ('--------------------------------')
 	print ('Rawdata loaded:')
 	print ('%i Images' % len(images))
 	print ('%i Labels' % len(steering_angles))
-	print ('---------------------------')
+	print ('--------------------------------')
 
 	return images, steering_angles
 
 def augmentation(images, steering_angles):
+	print("=================================")
+	print ('Augmenting data...')
 	augmented_images = []
 	augmented_steering_angles = []
 
@@ -67,7 +71,7 @@ def augmentation(images, steering_angles):
 		augmented_images.append(flipped_image)
 		augmented_steering_angles.append(flipped_angle)
 
-	print ('===========================')
+	print ('---------------------------')
 	print ('Data augmented:')
 	print ('%i Images' % len(augmented_images))
 	print ('%i Labels' % len(augmented_steering_angles))
