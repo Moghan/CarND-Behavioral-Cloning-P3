@@ -88,13 +88,14 @@ y_train = np.array(augmented_steering_angles)
 import keras
 from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda
-from keras.layers.convolutional import Convolution2D
+from keras.layers.convolutional import Convolution2D, Crapping
 from keras.layers.pooling import MaxPooling2D
 
 print ('Imported Keras')
 
 model = Sequential()
 model.add(Lambda(lambda x: x / 255.0 -0.5, input_shape = (160, 320, 3)))
+model.add(Crapping2D(crapping=((70, 25), (0, 0)))
 model.add(Convolution2D(24, 5, 5, subsample=(2, 2), activation = 'relu'))
 model.add(Convolution2D(36, 5, 5, subsample=(2, 2), activation = 'relu'))
 model.add(Convolution2D(48, 5, 5, subsample=(2, 2), activation = 'relu'))
