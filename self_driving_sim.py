@@ -7,8 +7,8 @@ import os.path
 
 PRE_TRAINED_MODEL_WEIGHTS_FILE_PATH = 'pre_trained_model/model_weights.h5'
 CSV_FILE_NAME_FINETUNING = 'recorded_data_finetuning/driving_log.csv'
-CSV_FILE_NAME = 'recorded_data/driving_log.csv'
-IMAGES_PATH = './recorded_data/IMG/'
+CSV_FILE_NAME = 'XL_recorded_data/driving_log.csv'
+IMAGES_PATH = 'XL_recorded_data/IMG/'
 
 IS_FINETUNING = False
 
@@ -146,6 +146,7 @@ train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 train_generator = generator(train_samples)
 validation_generator = generator(validation_samples)
 
+import tensorflow as tf
 
 import keras
 from keras.models import Sequential
@@ -157,7 +158,10 @@ print ('Imported Keras')
 
 model = Sequential()
 model.add(Lambda(lambda x: x / 255.0 -0.5, input_shape = (160, 320, 3)))
-model.add(Cropping2D(cropping=((70, 25), (0, 0))))
+model.add(Cropping2D(cropping=((70, 26), (0, 0))))
+model.add(Lambda(tf.image.resize_images,
+	output_shape=(80, 112, 3),
+    arguments={'size': (80, 112)}))
 
 # nvidias end-to-end self-driving-car CNN
 model.add(Convolution2D(24, 5, 5, subsample=(2, 2), activation = 'relu'))
@@ -181,7 +185,7 @@ if IS_FINETUNING:
 
 model.compile(optimizer='adam', loss='mse')
 # model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=5)
-model.fit_generator(train_generator, samples_per_epoch= len(train_samples)*6, validation_data=validation_generator, nb_val_samples=len(validation_samples)*6, nb_epoch=10)
+model.fit_generator(train_generator, samples_per_epoch= len(train_samples)*6, validation_data=validation_generator, nb_val_samples=len(validation_samples)*6, nb_epoch=4)
 
 model.save('model.h5')
 model.save_weights('model_weights.h5')
