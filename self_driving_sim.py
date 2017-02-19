@@ -3,8 +3,17 @@ import cv2
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
+import os.path
 
-CSV_file_name = 'recorded_data/driving_log.csv'
+PRE_TRAINED_MODEL_WEIGHTS_FILE_PATH = 'pre_trained_model/model_weights.h5'
+CSV_FILE_NAME_FINETUNING = 'recorded_data_finetuning/driving_log.csv'
+CSV_FILE_NAME = 'recorded_data/driving_log.csv'
+
+IS_FINETUNING = False
+
+if IS_FINETUNING:
+	assert os.path.exists(PRE_TRAINED_MODEL_WEIGHTS_FILE_PATH), 'IS_FINETUNING is set to True, but the file "pre_trained_model/model_weights.h5" does not exist.'
+	assert os.path.exists(CSV_FILE_NAME_FINETUNING), 'IS_FINETUNING is set to True, but the file "recorded_data_finetuning/driving_log.csv" does not exist.'
 
 def augmentation(images, steering_angles):
 	augmented_images = []
@@ -22,6 +31,12 @@ def augmentation(images, steering_angles):
 	return augmented_images, augmented_steering_angles
 
 def load_batch_data(batch_samples):
+	if IS_FINETUNING:
+		path = './recorded_data_finetuning/IMG/'
+	else:
+		path = './recorded_data/IMG/'
+
+
 	images = []
 	angles = []
 
@@ -29,19 +44,19 @@ def load_batch_data(batch_samples):
 		center_angle = float(batch_sample[3])
 
 		#center camera
-		name = './recorded_data/IMG/'+batch_sample[0].split('\\')[-1]
+		name = path + batch_sample[0].split('\\')[-1]
 		center_image = cv2.imread(name)
 		images.append(center_image)
 		# print('name' + name)
 		# print(center_image.shape)
 
 		#left camera
-		name = './recorded_data/IMG/'+batch_sample[1].split('\\')[-1]
+		name = path + batch_sample[1].split('\\')[-1]
 		left_image = cv2.imread(name)
 		images.append(center_image)
 
 		#right camera
-		name = './recorded_data/IMG/'+batch_sample[2].split('\\')[-1]
+		name = path + batch_sample[2].split('\\')[-1]
 		right_image = cv2.imread(name)
 		images.append(center_image)
 
@@ -94,7 +109,7 @@ def generator(samples, batch_size=32):
 				images, angles = load_batch_data(batch_samples)
 
 				#augment 
-				# images, angles = augmentation(images, angles)
+				images, angles = augmentation(images, angles)
 
 
 			X_train = np.array(images)
@@ -119,7 +134,11 @@ def load_CSV(file_name):
 	return list
 
 
-samples = load_CSV(CSV_file_name)
+if(IS_FINETUNING):
+	samples = load_CSV(CSV_FILE_NAME_FINETUNING)
+else:
+	samples = load_CSV(CSV_FILE_NAME)
+
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 
 
@@ -139,7 +158,7 @@ model = Sequential()
 model.add(Lambda(lambda x: x / 255.0 -0.5, input_shape = (160, 320, 3)))
 model.add(Cropping2D(cropping=((70, 25), (0, 0))))
 
-# nvidias end-to-end self-driving-car
+# nvidias end-to-end self-driving-car CNN
 model.add(Convolution2D(24, 5, 5, subsample=(2, 2), activation = 'relu'))
 model.add(Convolution2D(36, 5, 5, subsample=(2, 2), activation = 'relu'))
 model.add(Convolution2D(48, 5, 5, subsample=(2, 2), activation = 'relu'))
@@ -150,6 +169,9 @@ model.add(Dense(100))
 model.add(Dense(50))
 model.add(Dense(1))
 
+if IS_FINETUNING:
+	model.load_weights(PRE_TRAINED_MODEL_WEIGHTS_FILE_PATH)
+
 # model.add(Convolution2D(24, 3, 3, activation = 'relu'))
 # model.add(Flatten())
 # model.add(Dense(50))
@@ -158,6 +180,7 @@ model.add(Dense(1))
 
 model.compile(optimizer='adam', loss='mse')
 # model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=5)
-model.fit_generator(train_generator, samples_per_epoch= len(train_samples)*3, validation_data=validation_generator, nb_val_samples=len(validation_samples)*3, nb_epoch=3)
+model.fit_generator(train_generator, samples_per_epoch= len(train_samples)*6, validation_data=validation_generator, nb_val_samples=len(validation_samples)*6, nb_epoch=4)
 
 model.save('model.h5')
+model.save_weights('model_weights.h5')
