@@ -8,6 +8,7 @@ import os.path
 PRE_TRAINED_MODEL_WEIGHTS_FILE_PATH = 'pre_trained_model/model_weights.h5'
 CSV_FILE_NAME_FINETUNING = 'recorded_data_finetuning/driving_log.csv'
 CSV_FILE_NAME = 'recorded_data/driving_log.csv'
+IMAGES_PATH = './recorded_data/IMG/'
 
 IS_FINETUNING = False
 
@@ -34,8 +35,7 @@ def load_batch_data(batch_samples):
 	if IS_FINETUNING:
 		path = './recorded_data_finetuning/IMG/'
 	else:
-		path = './recorded_data/IMG/'
-
+		path = IMAGES_PATH
 
 	images = []
 	angles = []
@@ -130,6 +130,7 @@ def load_CSV(file_name):
 	print('Number of RAW samples: %i' % len(list))
 	print('Number of images: %i' % (len(list)*3))
 	print('Augmented no images: %i' % (len(list)*6))
+	print('======================================')
 
 	return list
 
@@ -163,7 +164,7 @@ model.add(Convolution2D(24, 5, 5, subsample=(2, 2), activation = 'relu'))
 model.add(Convolution2D(36, 5, 5, subsample=(2, 2), activation = 'relu'))
 model.add(Convolution2D(48, 5, 5, subsample=(2, 2), activation = 'relu'))
 model.add(Convolution2D(64, 3, 3, activation = 'relu'))
-model.add(Convolution2D(24, 3, 3, activation = 'relu'))
+model.add(Convolution2D(64, 3, 3, activation = 'relu'))
 model.add(Flatten())
 model.add(Dense(100))
 model.add(Dense(50))
@@ -180,7 +181,7 @@ if IS_FINETUNING:
 
 model.compile(optimizer='adam', loss='mse')
 # model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=5)
-model.fit_generator(train_generator, samples_per_epoch= len(train_samples)*6, validation_data=validation_generator, nb_val_samples=len(validation_samples)*6, nb_epoch=4)
+model.fit_generator(train_generator, samples_per_epoch= len(train_samples)*6, validation_data=validation_generator, nb_val_samples=len(validation_samples)*6, nb_epoch=10)
 
 model.save('model.h5')
 model.save_weights('model_weights.h5')
