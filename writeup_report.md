@@ -1,21 +1,15 @@
-* Build, a convolution neural network in Keras that predicts steering angles from images
-* Train and validate the model with a training and validation set
-* Test that the model successfully drives around track one without leaving the road
-* Summarize the results with a written report
-
-
 [//]: # (Image References)
 
 [model_visual]: ./examples/cnn-architecture-768x1095.png "Model Visualization"
-[right_image]: ./examples/placeholder_small.png "Right camera image"
-[t_right_image]: ./examples/placeholder_small.png "Image transformed"
-[rec_image1]: ./examples/placeholder_small.png "Recovery Image"
-[rec_image2]: ./examples/placeholder_small.png "Recovery Image"
-[image5]: ./examples/placeholder_small.png "Recovery Image"
-[image6]: ./examples/placeholder_small.png "Normal Image"
-[image7]: ./examples/placeholder_small.png "Flipped Image"
+[right_image]: ./examples/right_image.jpg "Right camera image"
+[t_right_image]: ./examples/t_right_image.jpg "Image transformed"
+[rec_image3]: ./examples/rec_image1.jpg "Recovery Image"
+[rec_image1]: ./examples/rec_image2.jpg "Recovery Image"
+[rec_image2]: ./examples/rec_image3.jpg "Recovery Image"
+[image1]: ./examples/center_image.jpg "Center Image"
+[flipped_right_image]: ./examples/flipped_right_image.jpg "Flipped Image"
 
-## Rubric Points
+## Writeup for P3 - Behavioral Cloning
 ###Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
 
 ---
@@ -67,7 +61,7 @@ With this in mind a wobbled the car from side to side for one lap, and then adde
 
 Nvidias approach, as I see it, was to augment using shift and rotation to teach how to recover from poor position and orientation. I imagined driving a real car like I did, in my first succesful attempt teaching it to drive, and felt strongly I wanted to do better. Since perspective transformation is brought up in P4, I looked into it, and added transformation(rotation) into my augmentation pipe. 
 
-Pretty sure the network do not need as much recory training as before. A future test would be with a larger test-set to see if recovey training can be done with augmentaton only.
+Pretty sure the network do not need as much recory training as before. A future test would be to train with a larger test-set to see if recovey training can be done with augmentaton only.
 
 
 ###Model Architecture and Training Strategy
@@ -76,7 +70,7 @@ Pretty sure the network do not need as much recory training as before. A future 
 
 I started with designing my tensorflow network from P2, but Keras made everything very simple, so it was not much fun.
 
-Afer I read a blod post at Nvidia, [End-to-End Deep Learning for Self-Driving Cars](https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/) , I decided to try on their achritecture.
+Afer I read a blog post at Nvidia, [End-to-End Deep Learning for Self-Driving Cars](https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/) , I decided to try on their achritecture.
 
 Early on I tried solving the bad driving with a larger training-set. I did not take long before generators was needed because of high memory usage.
 Finally I found out that it was possible to keep the car on the road with a very small training-set, so long it was a good set with a lot of recovery practise. All it took was some wobbling over the road, back and forth.
