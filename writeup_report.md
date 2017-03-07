@@ -90,32 +90,32 @@ The final model architecture (model.py lines 197-206)
 
 ####3. Creation of the Training Set & Training Process
 
-I first recorded two laps on track one using center lane driving.
+I first recorded one lap on track one using center lane driving.
 Example image:
 
 ![ex_center_drive][center_image]
 
-I then drove half a lap, wobbling back and forth to learn the car how to recover from bad orientation.
+A second lap was made using the middle 50% of the road, steering right and left.
+I then drove half a lap, wobbling back and forth over the whole road, to teach the car how to recover from bad orientation.
 
 ![recover training][rec_image1]
 ![recover training][rec_image2]
 ![recover training][rec_image3]
 
-After the collection process, I had 3388 number of data points (10164 images).
+When studying the car in autonomous mode, it didn´t look to good driving no and off the bridge. So made three bridge crossing as a last touch.
 
+After the collection process, I had 2991 number of data points (8973 images).
+Total size of training-set (after augmentation) = 29910 images
 
 To augmention pipeline consist of flipping all images and transform the left and right camera images.
 
 Flipped example:
-![image1][image1]
-![flipped_image1][flipped_image1]
+![image1][right_image]
+![flipped_image1][flipped_right_image]
 
 Transormation example:
 ![right image][right_image]
 ![transormed right image][t_right_image]
-
-Total size of training-set (after augmentation) = 33880 images
-
 
 I finally randomly shuffled the data set and put 20% of the data into a validation set. 
 
