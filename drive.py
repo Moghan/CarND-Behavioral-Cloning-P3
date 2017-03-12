@@ -16,6 +16,8 @@ from keras.models import load_model
 import h5py
 from keras import __version__ as keras_version
 
+import cv2
+
 sio = socketio.Server()
 app = Flask(__name__)
 model = None
@@ -47,6 +49,20 @@ controller = SimplePIController(0.1, 0.002)
 set_speed = 9
 controller.set_desired(set_speed)
 
+def gaussian_blur(img, kernel_size):
+    """Applies a Gaussian Noise kernel"""
+    return cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
+
+
+def image_preprocess(image):
+        image_array = np.asarray(image)
+        hls = cv2.cvtColor(image_array, cv2.COLOR_RGB2HLS)
+        s_channel = hls[:,:,2]
+        image = gaussian_blur(s_channel, 3)
+        image = image.reshape(image.shape + (1,))
+
+        return image
+
 
 @sio.on('telemetry')
 def telemetry(sid, data):
@@ -60,9 +76,13 @@ def telemetry(sid, data):
         # The current image from the center camera of the car
         imgString = data["image"]
         image = Image.open(BytesIO(base64.b64decode(imgString)))
-        image_array = np.asarray(image)
+
+        # Image preprocessing for better road recognition.
+        image_array = image_preprocess(image)
+
         steering_angle = float(model.predict(image_array[None, :, :, :], batch_size=1))
 
+        # Due to bad patience, the throttle is hardwired to 1.
         # throttle = controller.update(float(speed))
         throttle = 1.0
 

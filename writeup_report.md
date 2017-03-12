@@ -6,7 +6,7 @@
 [rec_image3]: ./examples/rec_image1.jpg "Recovery Image"
 [rec_image1]: ./examples/rec_image2.jpg "Recovery Image"
 [rec_image2]: ./examples/rec_image3.jpg "Recovery Image"
-[image1]: ./examples/center_image.jpg "Center Image"
+[center_image]: ./examples/center_image.jpg "Center Image"
 [flipped_right_image]: ./examples/flipped_right_image.jpg "Flipped Image"
 
 ## Writeup for P3 - Behavioral Cloning
@@ -50,19 +50,13 @@ Train/validation/test splits are made (code line 179).
 The model used an adam optimizer, so the learning rate was not tuned manually (code line 212).
 
 #### Appropriate training data
-Training data consist of images from all three cameras (center, left, right). There was one value for steering angle so an angle for left and right images was calculated with a correction of (+/-) 0.3. This teach the network to recover from poor position.
+Nvidias approach, which also had cameras on the side , was to augment using shift and rotation to teach how to recover from poor position and orientation.
 
-Driving training for recovery of poor orientation has been done.
+I started with the noble goal that I would do the same, but in the end, my training data is almost only images from recovering.
 
-Training data have been augmented with flipped images. This so the network gets equal amount of left and right steering.
+During training (and frpm Nvidias blog) I also found out that to much training data from driving straight will make the network biased to drive straight. It seems like the network forgets how to produce higher steering angles.
 
-Had some struggle before I realized that driving the track perfectly during training was a bad idea. The car got biased to drive straight I guess, not knowing how to recover when entering a curve.
-With this in mind a wobbled the car from side to side for one lap, and then added another trying to stay in the middle. Great relief to see the car finally get around. Not a beauty sight, but stable.
-
-Nvidias approach, as I see it, was to augment using shift and rotation to teach how to recover from poor position and orientation. I imagined driving a real car like I did, in my first succesful attempt teaching it to drive, and felt strongly I wanted to do better. Since perspective transformation is brought up in P4, I looked into it, and added transformation(rotation) into my augmentation pipe. 
-
-Pretty sure the network do not need as much recory training as before. A future test would be to train with a larger test-set to see if recovey training can be done with augmentaton only.
-
+Training data have been augmented with flipped images. 
 
 ###Model Architecture and Training Strategy
 
@@ -70,52 +64,47 @@ Pretty sure the network do not need as much recory training as before. A future 
 
 I started with designing my tensorflow network from P2, but Keras made everything very simple, so it was not much fun.
 
-Afer I read a blog post at Nvidia, [End-to-End Deep Learning for Self-Driving Cars](https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/) , I decided to try on their achritecture.
+After I read a blog post at Nvidia, [End-to-End Deep Learning for Self-Driving Cars](https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/) , I decided to try on their achritecture. This network architecture is most likely way overdimensioned, but time is up and the quest for the smallest possible network will be a future project.
 
-Early on I tried solving the bad driving with a larger training-set. I did not take long before generators was needed because of high memory usage.
-Finally I found out that it was possible to keep the car on the road with a very small training-set, so long it was a good set with a lot of recovery practise. All it took was some wobbling over the road, back and forth.
+Early on I tried solving the bad driving with increasing the training-set. I did not take long before generators was needed because of high memory usage.
+Finally I found out that it was possible to keep the car on the road with a very small training-set, as long it was a good set with a lot of recovery practise. All it took was some wobbling over the road, back and forth.
 
-To reduce the need of wobbling, transformation was put in the augmentation pipe.
+Setting up the network was the easy part. Implementing generators, a smaller speedbumb. The main issue was to realize how to create a good set of training data.
 
-The final step was to experiment with creating a good training set.
-
-At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
+At the end of the process, I had problem with the left curve, just after crossing the bridge. There it seemed like the main road and the dirt road looked to much the same. I got a tip from my mentor to play with the images, so I set everything up to use the s-channel of a HLS image instead, and added Gaussian blur to them. Like magic, the network now performed excellent.
 
 ####2. Final Model Architecture
 
 The final model architecture (model.py lines 197-206)
-(image is from the blog post mentioned above)
+
+This image is from Nvidias blog post mentioned above:
 
 ![Model architecture][model_visual]
 
 ####3. Creation of the Training Set & Training Process
 
-I first recorded one lap on track one using center lane driving.
-Example image:
+Almost all training-set images are from the vehicle recovering to the middle. Some smooth driving is done in the curves. I small part the vehicle was driven from left to right using maximum steering angle.
 
-![ex_center_drive][center_image]
-
-A second lap was made using the middle 50% of the road, steering right and left.
-I then drove half a lap, wobbling back and forth over the whole road, to teach the car how to recover from bad orientation.
+Example of recovery training from the left side of the road:
 
 ![recover training][rec_image1]
 ![recover training][rec_image2]
 ![recover training][rec_image3]
 
-When studying the car in autonomous mode, it didn´t look to good driving no and off the bridge. So made three bridge crossing as a last touch.
+The training process created 9421 data points and three images for every data point.
+Total size of training-set after augmentation is 56526 images
 
-After the collection process, I had 2991 number of data points (8973 images).
-Total size of training-set (after augmentation) = 29910 images
-
-To augmention pipeline consist of flipping all images and transform the left and right camera images.
+The augmentation pipeline consist of flipping all images.
 
 Flipped example:
 ![image1][right_image]
 ![flipped_image1][flipped_right_image]
 
-Transormation example:
-![right image][right_image]
-![transormed right image][t_right_image]
+
+Images are preprocessed to make the road stand out from the surroundings more clearly. 
+1. Convert from BGR to HLS
+2. Filter out S-channel
+3. Add a Gaussian blur
 
 I finally randomly shuffled the data set and put 20% of the data into a validation set. 
 

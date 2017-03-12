@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 import os.path
+import matplotlib.image as mpimg
 
 import glob
 
@@ -19,33 +20,6 @@ if IS_FINETUNING:
 	assert os.path.exists(PRE_TRAINED_MODEL_WEIGHTS_FILE_PATH), 'IS_FINETUNING is set to True, but the file "pre_trained_model/model_weights.h5" does not exist.'
 	assert os.path.exists(CSV_FILE_NAME_FINETUNING), 'IS_FINETUNING is set to True, but the file "recorded_data_finetuning/driving_log.csv" does not exist.'
 
-def right_transform(img):
-    w_height = img.shape[0]
-    w_width = img.shape[1]
-
-    offset = 40   
-
-    src = np.float32([[0,offset],[w_width,offset],[w_width, w_height-offset],[0, w_height -offset]])
-    dst = np.float32([[0,offset],[w_width,0],[w_width, w_height],[0, w_height-offset]])
-
-    M = cv2.getPerspectiveTransform(src, dst)
-    warped = cv2.warpPerspective(img, M, (w_width, w_height), flags=cv2.INTER_LINEAR)
-
-    return warped
-
-def left_transform(img):
-    w_height = img.shape[0]
-    w_width = img.shape[1]
-
-    offset = 40   
-
-    src = np.float32([[0,offset],[w_width,offset],[w_width, w_height-offset],[0, w_height -offset]])
-    dst = np.float32([[0,0],[w_width,offset],[w_width, w_height-offset],[0, w_height]])
-
-    M = cv2.getPerspectiveTransform(src, dst)
-    warped = cv2.warpPerspective(img, M, (w_width, w_height), flags=cv2.INTER_LINEAR)
-
-    return warped
 
 # nummber of images increase x (10/3)
 def augmentation(images, steering_angles):
@@ -54,45 +28,32 @@ def augmentation(images, steering_angles):
 	augmented_images = []
 	augmented_steering_angles = []
 
-	correction = 0.3
-
-	count = 0
 	for image, angle in zip(images, steering_angles):
-		if (count % 3) == 1: # left camera image
-			lt_image = left_transform(image)
-			augmented_images.append(lt_image)
-			augmented_steering_angles.append(angle + correction)
-
-			flipped_image = cv2.flip(lt_image, 1)
-			flipped_angle = (angle+correction) * -1
-			augmented_images.append(flipped_image)
-			augmented_steering_angles.append(flipped_angle)
-
-		elif (count % 3) == 2: # right camera image
-			rt_image = right_transform(image)
-			augmented_images.append(rt_image)
-			augmented_steering_angles.append(angle - correction)
-
-			flipped_image = cv2.flip(rt_image, 1)
-			flipped_angle = (angle-correction) * -1
-			augmented_images.append(flipped_image)
-			augmented_steering_angles.append(flipped_angle)
-
-		count += 1
-
-	
-	for image, angle in zip(images, steering_angles):
-		augmented_images.append(image)
+		p_image = process_image(image)
+		augmented_images.append(p_image)
 		augmented_steering_angles.append(angle)
 
 		flipped_image = cv2.flip(image, 1)
+		p_flipped_image = process_image(flipped_image)
 		flipped_angle = angle * -1
-		augmented_images.append(flipped_image)
+		augmented_images.append(p_flipped_image)
 		augmented_steering_angles.append(flipped_angle)
 
-		
-
 	return augmented_images, augmented_steering_angles
+
+
+def gaussian_blur(img, kernel_size):
+    """Applies a Gaussian Noise kernel"""
+    return cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
+
+
+def process_image(image):
+	hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+	s_channel = hls[:,:,2]
+	image = gaussian_blur(s_channel, 3)
+	image = image.reshape(image.shape + (1,))
+	return image
+
 
 def load_batch_data(batch_samples):
 	if IS_FINETUNING:
@@ -108,18 +69,22 @@ def load_batch_data(batch_samples):
 
 		#center camera
 		name = path + batch_sample[0].split('\\')[-1]
-		center_image = cv2.imread(name)
+		center_image = mpimg.imread(name)
+		# center_image = process_image(center_image)
 		images.append(center_image)
+
 
 		#left camera
 		name = path + batch_sample[1].split('\\')[-1]
-		left_image = cv2.imread(name)
-		images.append(center_image)
+		left_image = mpimg.imread(name)
+		# left_image = process_image(left_image)
+		images.append(left_image)
 
 		#right camera
 		name = path + batch_sample[2].split('\\')[-1]
-		right_image = cv2.imread(name)
-		images.append(center_image)
+		right_image = mpimg.imread(name)
+		# right_image = process_image(right_image)
+		images.append(right_image)
 
 		#append center, left and right angle
 		correction = 0.3
@@ -163,9 +128,9 @@ def load_CSV(file_name):
 
 	print('======================================')
 	print('Data statistics\n')
-	print('Number of RAW samples: %i' % len(list))
+	print('Number of data points: %i' % len(list))
 	print('Number of images: %i' % (len(list)*3))
-	print('Augmented no images: %i' % (len(list)*10))
+	print('Augmented number of images: %i' % (len(list)*6))
 	print('======================================')
 
 	return list
@@ -191,7 +156,7 @@ from keras.layers.convolutional import Convolution2D, Cropping2D
 from keras.layers.pooling import MaxPooling2D
 
 model = Sequential()
-model.add(Lambda(lambda x: x / 255.0 -0.5, input_shape = (160, 320, 3)))
+model.add(Lambda(lambda x: x / 255.0 -0.5, input_shape = (160, 320, 1)))
 model.add(Cropping2D(cropping=((70, 26), (0, 0))))
 
 # nvidias end-to-end self-driving-car CNN
@@ -210,7 +175,7 @@ if IS_FINETUNING:
 	model.load_weights(PRE_TRAINED_MODEL_WEIGHTS_FILE_PATH)
 
 model.compile(optimizer='adam', loss='mse')
-model.fit_generator(train_generator, samples_per_epoch= len(train_samples)*10, validation_data=validation_generator, nb_val_samples=len(validation_samples)*10, nb_epoch=5)
+model.fit_generator(train_generator, samples_per_epoch= len(train_samples)*6, validation_data=validation_generator, nb_val_samples=len(validation_samples)*6, nb_epoch=5)
 
 model.save('model.h5')
 model.save_weights('model_weights.h5')
