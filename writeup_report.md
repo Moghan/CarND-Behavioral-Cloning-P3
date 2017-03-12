@@ -2,12 +2,16 @@
 
 [model_visual]: ./examples/cnn-architecture-768x1095.png "Model Visualization"
 [right_image]: ./examples/right_image.jpg "Right camera image"
-[t_right_image]: ./examples/t_right_image.jpg "Image transformed"
 [rec_image3]: ./examples/rec_image1.jpg "Recovery Image"
 [rec_image1]: ./examples/rec_image2.jpg "Recovery Image"
 [rec_image2]: ./examples/rec_image3.jpg "Recovery Image"
 [center_image]: ./examples/center_image.jpg "Center Image"
 [flipped_right_image]: ./examples/flipped_right_image.jpg "Flipped Image"
+
+[orig_image]: ./examples/origin.jpg "Original image"
+[hls_image]: ./examples/hls.jpg "HLS image"
+[s_channel]: ./examples/s_channel "S-channel"
+[gaussian_blurred]: ./examples/gaussian.jpg "Gaussian blurred S-channel"
 
 ## Writeup for P3 - Behavioral Cloning
 ###Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
@@ -37,24 +41,25 @@ The model.py file contains the code for training and saving the convolution neur
 ###Model Architecture and Training Strategy
 ####1. An appropriate model architecture has been employed
 
-Data is normalized in the model using a Keras lambda layer (code line 194). 
+Data is normalized and cropped in the model using Keras lambda layers (code line 159-160).
+
 
 ####2. Attempts to reduce overfitting in the model
 
 The model was trained and validated on different data sets to ensure that the model was not overfitting. The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
-Train/validation/test splits are made (code line 179).
+Train/validation/test splits are made (code line 144).
 
 #### Model parameter tuning
 
-The model used an adam optimizer, so the learning rate was not tuned manually (code line 212).
+The model used an adam optimizer, so the learning rate was not tuned manually (code line 177).
 
 #### Appropriate training data
 Nvidias approach, which also had cameras on the side , was to augment using shift and rotation to teach how to recover from poor position and orientation.
 
 I started with the noble goal that I would do the same, but in the end, my training data is almost only images from recovering.
 
-During training (and frpm Nvidias blog) I also found out that to much training data from driving straight will make the network biased to drive straight. It seems like the network forgets how to produce higher steering angles.
+During training (and from Nvidias blog) I also found out that to much training data from driving straight will make the network biased to drive straight. It seems like the network forgets how to produce higher steering angles.
 
 Training data have been augmented with flipped images. 
 
@@ -75,7 +80,7 @@ At the end of the process, I had problem with the left curve, just after crossin
 
 ####2. Final Model Architecture
 
-The final model architecture (model.py lines 197-206)
+The final model architecture (model.py lines 158-171)
 
 This image is from Nvidias blog post mentioned above:
 
@@ -83,9 +88,9 @@ This image is from Nvidias blog post mentioned above:
 
 ####3. Creation of the Training Set & Training Process
 
-Almost all training-set images are from the vehicle recovering to the middle. Some smooth driving is done in the curves. I small part the vehicle was driven from left to right using maximum steering angle.
+Almost all training-set images are from the vehicle recovering to the middle. Some smooth driving is done in the curves. I small part of the training-set is from "wobbling", using the full width of the road with maximum steering angle.
 
-Example of recovery training from the left side of the road:
+Example of recovery training from the left side of the road, getting back to the middle:
 
 ![recover training][rec_image1]
 ![recover training][rec_image2]
@@ -101,10 +106,24 @@ Flipped example:
 ![flipped_image1][flipped_right_image]
 
 
-Images are preprocessed to make the road stand out from the surroundings more clearly. 
+Images are preprocessed to make the road stand out from the surroundings more clearly.
+
 1. Convert from BGR to HLS
 2. Filter out S-channel
 3. Add a Gaussian blur
+
+Original image:
+![original image][orig_image]
+
+Converted to HLS:
+![image converted to HLS][hls_image]
+
+S-channel of HLS image:
+![S-channel of HLS image][s_channel]
+
+S-channel with Gaussian blur:
+![blurred S-channel][gaussian_blurred]
+
 
 I finally randomly shuffled the data set and put 20% of the data into a validation set. 
 
