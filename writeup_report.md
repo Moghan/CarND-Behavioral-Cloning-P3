@@ -10,7 +10,7 @@
 
 [orig_image]: ./examples/origin.jpg "Original image"
 [hls_image]: ./examples/hls.jpg "HLS image"
-[s_channel]: ./examples/s_channel "S-channel"
+[s_channel]: ./examples/s_channel.jpg "S-channel"
 [gaussian_blurred]: ./examples/gaussian.jpg "Gaussian blurred S-channel"
 
 ## Writeup for P3 - Behavioral Cloning
@@ -113,15 +113,19 @@ Images are preprocessed to make the road stand out from the surroundings more cl
 3. Add a Gaussian blur
 
 Original image:
+
 ![original image][orig_image]
 
 Converted to HLS:
+
 ![image converted to HLS][hls_image]
 
 S-channel of HLS image:
+
 ![S-channel of HLS image][s_channel]
 
 S-channel with Gaussian blur:
+
 ![blurred S-channel][gaussian_blurred]
 
 
